@@ -1,0 +1,86 @@
+package openscenegraph.core
+
+import de.surfice.smacrotools.{BlackboxMacroTools, debug}
+
+import scalanative._
+import unsafe._
+import cxx._
+import scala.reflect.macros.blackbox
+import scala.scalanative.cobj.{CObject, CObjectWrapper, ResultValue}
+import scala.language.experimental.macros
+import scala.scalanative.interop.PoolZone
+
+/**
+ * @see [[]]
+ */
+@Cxx(namespace = "osg", classname = "ref_ptr")
+@include("<osg/Config>")
+@debug
+final class RefPtr[T<:CObject] extends ResultValue[T] {
+  @inline def get: Ptr[Byte] = extern
+  @inline def pointer(implicit wrapper: CObjectWrapper[T]): T = wrapper.wrap(get)
+//  @inline override def wrappedValue(implicit wrapper: CObjectWrapper[T]): T = macro RefPtr.Macros.wrappedValueImpl[T]
+}
+object RefPtr {
+  @constructor
+  def apply[T<:CObject](): RefPtr[T] = extern
+//  def apply[T<:CObject](obj: T)(implicit tag: Tag[T]): ResultValue[T] = new Impl[T](obj.__ptr)
+//  def alloc[T](implicit tag: Tag[Byte], zone: Zone): ResultValue[T] = macro Macros.allocImpl[T]
+//  def stackalloc[T]: RefPtr[T] = macro Macros.stackallocImpl[T]
+/*
+  class Macros(val c: blackbox.Context) extends BlackboxMacroTools {
+    import c.universe._
+
+    val tAnyVal  = weakTypeOf[AnyVal]
+    val tPtr     = weakTypeOf[Ptr[_]]
+    val tCStruct = weakTypeOf[CStruct]
+    val tCObject = weakTypeOf[CObject]
+
+    def allocImpl[T: WeakTypeTag](tag: Tree, zone: Tree) = {
+      val tpe = weakTypeOf[T]
+      val tree =
+        if(tpe <:< tCObject)
+          q"new scalanative.cobj.ResultValue.Impl[$tpe](scalanative.unsafe.alloc[Byte](${tpe.typeSymbol.companion}.__sizeof)($tag,$zone))"
+        else
+          ???
+      tree
+    }
+
+    def stackallocImpl[T: WeakTypeTag] = {
+      val tpe = weakTypeOf[T]
+      val tree =
+        if(tpe <:< tCObject)
+          q"new scalanative.cobj.ResultValue.Impl[$tpe](scalanative.unsafe.stackalloc[Byte](${tpe.typeSymbol.companion}.__sizeof))"
+        else
+          ???
+      tree
+    }
+
+
+    def wrappedValueImpl[T: WeakTypeTag](wrapper: Tree) = {
+      val tpe = weakTypeOf[T]
+      val self = c.prefix
+      val tree =
+        if(tpe <:< tAnyVal || tpe <:< tPtr || tpe <:< tCStruct ) {
+          c.error(c.enclosingPosition,s"cannot wrap value of type $tpe; use method 'value' instead")
+          ???
+        }
+        else
+          q"""
+             $wrapper.wrap($self.__ptr)
+           """
+      c.Expr(tree)
+    }
+
+    def wrappedThis[T: WeakTypeTag](wrapper: Tree) = {
+      val self = c.prefix
+      val tree =
+        q"""
+           $wrapper.wrap($self.__ptr)
+         """
+      c.Expr(tree)
+    }
+
+  }
+*/
+}
